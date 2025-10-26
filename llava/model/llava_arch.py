@@ -252,7 +252,7 @@ class LlavaMetaForCausalLM(ABC):
         vision_tower = self.get_vision_tower()
         # rank_print(modalities)
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
-            modality_ids = torch.full((len(input_ids),), 0, device=input_ids.device, dtype=input_ids.dtype)
+            modality_ids = torch.full((len(input_ids), 1), 0, device=input_ids.device, dtype=input_ids.dtype)
             return input_ids, position_ids, attention_mask, past_key_values, None, labels, modality_ids
 
         if isinstance(modalities, str):
@@ -408,7 +408,7 @@ class LlavaMetaForCausalLM(ABC):
                     else:  # single image operations
                         image_feature = image_feature[0]
                         if "unpad" in mm_patch_merge_type:
-                            image_feature = torch.cat((image_feature, self.model.image_newline[None].to(image_feature.device)), dim=0, device=image_feature.device)
+                            image_feature = torch.cat((image_feature, self.model.image_newline[None].to(image_feature.device)), dim=0)
 
                         new_image_features.append(image_feature)
                 image_features = new_image_features
