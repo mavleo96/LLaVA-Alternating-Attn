@@ -4,7 +4,8 @@ import torch
 
 def modality_ids_to_modality_attention_mask(modality_ids, input_shape, torch_dtype):
     assert modality_ids.ndim == 2
-    assert modality_ids.unique().numel() == 2 # text: 0, image: 1
+    assert modality_ids.unique().max() <= 1 # text: 0, image: 1
+    assert modality_ids.unique().min() >= 0 # text: 0, image: 1
 
     # input_shape is (batch_size, seq_length)
     _, s = input_shape
