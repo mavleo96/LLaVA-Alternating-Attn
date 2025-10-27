@@ -1,5 +1,13 @@
 python llava/eval/blink_eval.py \
   --model_path "liuhaotian/llava-v1.6-mistral-7b" \
   --model_name "llava_mistral" \
-  --max_samples 20 \
-  --subtask "Visual_Correspondence"
+  --subtask "Visual_Correspondence" \
+  --device "cuda:1" \
+  --conv_template "manual"
+
+python llava/eval/blink_eval.py \
+  --model_path "lmms-lab/llava-onevision-qwen2-0.5b-ov" \
+  --model_name "llava_qwen"  \
+  --subtask Visual_Correspondence \
+  --device "cuda:1" \
+  --conv_template "qwen_1_5"

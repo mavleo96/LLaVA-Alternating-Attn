@@ -14,6 +14,7 @@ import json
 from llava.model.builder import load_pretrained_model
 from llava.mm_utils import tokenizer_image_token, process_images
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
+from llava.conversation import conv_templates
 from llava.utils import disable_torch_init
 
 from collections import Counter
@@ -48,14 +49,12 @@ def main():
     parser.add_argument("--model_path", type=str, required=True, help="Path to model")
     parser.add_argument("--model_name", type=str, default="llava_mistral", help="Model name")
     parser.add_argument("--output_path", type=str, default="blink_results.json", help="Output path for results")
-    # parser.add_argument("--conv_template", type=str, default="mistral_instruct", help="Conversation template")
+    parser.add_argument("--conv_template", type=str, default="mistral_instruct", help="Conversation template")
     parser.add_argument("--device", type=str, default="cuda:0", help="Device to use")
     parser.add_argument("--load_8bit", action="store_true", help="Load model in 8bit")
     parser.add_argument("--load_4bit", action="store_true", help="Load model in 4bit")
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to evaluate")
-    # parser.add_argument("--batch_size", type=int, default=1, help="Batch size for evaluation")
     parser.add_argument("--subtask", type=str, default="Visual_Correspondence", help="BLINK subtask")
-    # parser.add_argument("--split", type=str, default="val", help="Dataset split to use")
     
     args = parser.parse_args()
     
@@ -86,12 +85,18 @@ def main():
         question_text = "Question: " + item["question"]
         detailed_prompt = "Details: " + item["prompt"]
         directive = "Answer with the option’s letter from the given choices directly."
-        prompt = (
-            image_prompt + "\n" +
-            question_text + "\n" +
-            detailed_prompt + "\n" +
-            directive + "\n"
-        )
+        if args.conv_template == "manual":
+            prompt = (
+                image_prompt + "\n" +
+                question_text + "\n" +
+                detailed_prompt + "\n" +
+                directive + "\n"
+            )
+        else:
+            conv = conv_templates[args.conv_template].copy()
+            conv.append_message(conv.roles[0], image_prompt + "\n" + question_text + "\n" + detailed_prompt + "\n" + directive)
+            conv.append_message(conv.roles[1], None)
+            prompt = conv.get_prompt()
 
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
         input_ids = input_ids.unsqueeze(0).to(args.device)
@@ -119,7 +124,7 @@ def main():
         results.append({
             "id": item["idx"],
             "raw_answer": response,
-            "extracted_answer": response_extracted,
+            "answer": response_extracted,
             "correct_answer": item["answer"],
             "correct": correct,
             "prompt": prompt,
@@ -135,7 +140,7 @@ def main():
     print(f"Final accuracy: {accuracy:.2f}")
 
     # Distribution of predicted answers vs correct answers
-    predicted_answers = [result["extracted_answer"] for result in results]
+    predicted_answers = [result["answer"] for result in results]
     correct_answers = [result["correct_answer"] for result in results]
     print(f"Distribution of predicted answers vs correct answers:")
     predicted_answers = sorted(Counter(predicted_answers).items(), key=lambda x: x[0])
