@@ -2,75 +2,9 @@
 
 This file documents new flags added to `train_alternating.py` and shows examples for alternating-attention and alternating-cross-attention variants.
 
-New flags in `train_alternating.py`:
+### Flags
 
-- `--variant` : one of `auto|alternating|alternating_cross|base`. Use this to assert which model variant you expect to train. The wrapper will inspect the model's `config.model_type` and warn/exit if it doesn't match (unless `--force` is used).
-- `--dry_run` : load the model config and print `model_type` then exit; useful to confirm which class the checkpoint maps to before starting a long training run.
-- `--force` : continue even if the model config does not match your requested `--variant`.
-- `--inspect_data`: load the dataset (lazy) and print the number of samples and a raw preview of the first sample (no heavy image processing). Useful to confirm your LAION subset is in the expected JSON/jsonl format.
-- `--inspect_weights`: when used together with `--init_from_backbone`, load the backbone LM into the alternating-attn class (partial `load_state_dict(..., strict=False)`) and print counts and a small sample of missing/unexpected keys; then exit. This helps you evaluate how much is uninitialized before training.
-
-Examples
---------
-
-# Dry-run inspect model type
-```bash
-python train_alternating.py --model_name_or_path lmms-lab/llava-onevision-qwen2-0.5b-ov --data_path /tmp/dummy.json --dry_run
-```
-
-# Inspect dataset (counts + sample preview)
-```bash
-python train_alternating.py \
-  --model_name_or_path lmms-lab/llava-onevision-qwen2-0.5b-ov \
-  --data_path /path/to/laion_subset.json \
-  --inspect_data
-```
-
-# Inspect backbone->alternating partial weight mapping
-```bash
-python train_alternating.py \
-  --backbone_model qwen2-base-or-local \
-  --data_path /path/to/laion_subset.json \
-  --variant alternating \
-  --init_from_backbone \
-  --inspect_weights
-```
-
-# Train and require alternating-attn variant
-```bash
-python train_alternating.py \
-  --model_name_or_path path_or_repo_with_alternating_attn \
-  --data_path /path/to/laion_subset_in_llava_format.json \
-  --output_dir outputs/alt_qwen2 \
-  --variant alternating
-```
-
-# Train using the alternating cross-attention variant (requires a checkpoint that provides it)
-```bash
-python train_alternating.py \
-  --model_name_or_path path_or_repo_with_alternating_cross_attn \
-  --data_path /path/to/laion_subset_in_llava_format.json \
-  --output_dir outputs/alt_qwen2_cross \
-  --variant alternating_cross
-```
-
-Notes
------
-- The wrapper uses `AutoConfig.from_pretrained()` to inspect `config.model_type` for the given `--model_name_or_path`. This is a lightweight check (it loads the config only) and does not require downloading full model weights.
-- If you need the wrapper to *force* an alternating-attn architecture even when the checkpoint/config doesn't include it, I can add a `--force_class` option that will attempt to override the loader behavior and create a new alternating-attn model from base config, but that is a larger, riskier change. Safer is to use a checkpoint that already provides the correct `model_type`.
-
-## Training wrapper: extended notes
-
-This document explains the new workflow in `train_alternating.py` and gives clear, practical steps for two common scenarios:
-
-- Training from an existing alternating-attention checkpoint (best case).
-- Starting from a backbone LM checkpoint (no alternating checkpoint) and initializing an alternating-attention model from it (safe partial-init flow).
-
-The goal is to keep repository changes small and reuse the existing training loop while providing safe helpers to inspect data and weight mapping before committing to a long training run.
-
-### New flags (short summary)
-
-- `--variant` : one of `auto|alternating|alternating_cross|base`. Use this to assert which model variant you expect to train. The wrapper uses `config.model_type` to check the checkpoint and will warn or exit if it doesn't match (use `--force` to override).
+- `--variant` : one of `auto|alternating|alternating_cross|base`. Use this to assert which model variant expect to train. The wrapper uses `config.model_type` to check the checkpoint and will warn or exit if it doesn't match (use `--force` to override).
 - `--init_from_backbone` : instantiate the alternating-attn model class and initialize it from a backbone LM checkpoint by copying matching LM parameters (name + shape) only.
 - `--backbone_model` : path or HF repo id for the backbone LM to use when `--init_from_backbone` is set.
 - `--inspect_data` : load the dataset lazily and print counts + first-sample preview (safe, no heavy image transforms).
@@ -81,8 +15,8 @@ The goal is to keep repository changes small and reuse the existing training loo
 ### Quick decision flow (human steps)
 
 1. Confirm your data manifest is in an accepted LLAVA format (json/jsonl/yaml list). Use `--inspect_data` to preview counts and the first sample.
-2. If you have an alternating-attn checkpoint, use it directly with `--model_name_or_path` and optionally `--variant alternating`.
-3. If you only have a backbone LM checkpoint, set `--init_from_backbone --backbone_model <path-or-repo>` and use `--inspect_weights` first to see which LM parameters will be copied into the alternating model.
+2. If have an alternating-attn checkpoint, use it directly with `--model_name_or_path` and optionally `--variant alternating`.
+3. If it only have a backbone LM checkpoint, set `--init_from_backbone --backbone_model <path-or-repo>` and use `--inspect_weights` first to see which LM parameters will be copied into the alternating model.
 4. Once inspection looks good, run the full training command. The wrapper will build the data module using the repo's `make_supervised_data_module()` and then call into the existing training loop.
 
 ### Examples — commands you can copy
@@ -151,8 +85,6 @@ Notes on throughput callback: set `--throughput_log_steps N` to print simple met
   2) have an identical tensor shape.
 - We explicitly skip multimodal-specific parameter groups such as `mm_projector`, `vision_resampler`, and similar modules to avoid shape or semantic mismatches.
 - After copying the matching parameters we call `load_state_dict(..., strict=False)` so remaining keys (uninitialized multimodal heads, new layers) are left to random initialization and trained from scratch.
-
-This approach is conservative and avoids silent corruption from mismatched parameter shapes.
 
 ### Short Python snippet: selective-copy logic (what the wrapper does)
 
