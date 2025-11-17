@@ -2,7 +2,7 @@
 """
 Small wrapper to run the existing LLaVA training pipeline with the alternating-attention Qwen2 model.
 
-This script intentionally keeps changes minimal: it builds CLI arguments expected by
+This script builds CLI arguments expected by
 `llava.train.train.train()` (which uses `HfArgumentParser`) and calls that function.
 
 Usage examples (from repo root):
