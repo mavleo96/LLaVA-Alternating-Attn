@@ -31,8 +31,9 @@ python scripts/blink_eval.py \
 ### Command to save attention matrix for Blink evaluation:
 
 python playground/attention_matrix_save_for_blink.py \
-  --model_path "lmms-lab/llava-onevision-qwen2-0.5b-ov" \
+  --model_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
   --model_name "llava_qwen_with_alternating_attn" \
+  --lora_weights_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune/checkpoint-11000" \
   --subtask Visual_Correspondence \
   --device "cuda:1" \
   --conv_template "qwen_2" \
