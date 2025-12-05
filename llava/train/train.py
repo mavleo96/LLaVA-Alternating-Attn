@@ -25,6 +25,17 @@ from typing import Dict, Optional, Sequence, List
 from PIL import Image, ImageFile
 from packaging import version
 import numpy as np
+import warnings
+
+# Suppress deprecation warning for vocab_size attribute in LLaVA config
+# This warning comes from transformers library accessing config.vocab_size internally
+# The library suggests using text_config.vocab_size instead, but this is internal to transformers
+# Filter any FutureWarning related to vocab_size deprecation
+warnings.filterwarnings(
+    "ignore",
+    message=r".*vocab_size.*attribute is deprecated.*",
+    category=FutureWarning
+)
 
 import time
 import random
