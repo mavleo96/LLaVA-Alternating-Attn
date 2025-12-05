@@ -90,7 +90,7 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --warmup_ratio 0.03 \
   --lr_scheduler_type "cosine" \
   --logging_steps 100 \
-  --model_max_length 4096 \
+  --model_max_length 2048 \
   --gradient_checkpointing False \
   --dataloader_num_workers 4 \
   --lazy_preprocess True \
