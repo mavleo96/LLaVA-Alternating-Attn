@@ -3,22 +3,21 @@ from datasets import load_dataset
 from tqdm import tqdm
 import json
 
+# Cauldron datasets
 # CONFIG_NAME = "aokvqa(cauldron,llava_format)"
 # CONFIG_FILE_NAME = "ov_aokvqa_cauldron_llava_format.json"
 # CONFIG_NAME = "chartqa(cauldron,llava_format)"
 # CONFIG_FILE_NAME = "ov_chartqa_cauldron_llava_format.json"
 # CONFIG_NAME = "clevr(cauldron,llava_format)"
 # CONFIG_FILE_NAME = "ov_clevr_cauldron_llava_format.json"
+# CONFIG_NAME = "tqa(cauldron,llava_format)"
+# CONFIG_FILE_NAME = "ov_tqa_cauldron_llava_format.json"
+# CONFIG_NAME = "raven(cauldron)"
+# CONFIG_FILE_NAME = "ov_raven_cauldron.json"
 
-CONFIG_NAME = "llava_wild_4v_39k_filtered"
-CONFIG_FILE_NAME = "ov_llava_wild_4v_39k_filtered.json"
-
-# CONFIG_NAME = "figureqa(cauldron,llava_format)"
-# CONFIG_FILE_NAME = "ov_figureqa_cauldron_llava_format.json"
-# CONFIG_NAME = "geomverse(cauldron)"
-# CONFIG_FILE_NAME = "ov_geomverse_cauldron.json"
-# CONFIG_NAME = "hateful_memes(cauldron,llava_format)"
-# CONFIG_FILE_NAME = "ov_hateful_memes_cauldron_llava_format.json"
+# Vision Flan
+CONFIG_NAME = "vision_flan(filtered)"
+CONFIG_FILE_NAME = "ov_vision_flan_filtered.json"
 
 data = load_dataset(
     "lmms-lab/LLaVA-OneVision-Data",
@@ -41,8 +40,8 @@ for da in tqdm(data):
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
         img = da["image"]
-        # JPEG does not support RGBA; convert if needed
-        if img.mode == "RGBA":
+        # JPEG only supports RGB; convert any other mode (RGBA, palette, grayscale, etc.) to RGB
+        if img.mode != "RGB":
             img = img.convert("RGB")
         img.save(out_path, format="JPEG")
     json_data["conversations"] = da["conversations"]

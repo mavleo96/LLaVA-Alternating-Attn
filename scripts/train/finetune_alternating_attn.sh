@@ -40,7 +40,7 @@ export NCCL_DEBUG=${NCCL_DEBUG:-WARN}
 # Default to the locally downloaded alternating-attn checkpoint.
 
 IMAGE_FOLDER="/workspace/data/LLaVA-OneVision-Data"
-RUN_NAME="llavanext-altattn-google_siglip-so400m-patch14-384-Qwen_Qwen2-0.5B-Instruct-local_finetune"
+RUN_NAME="llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune"
 OUTPUT_DIR="/workspace/checkpoints/${RUN_NAME}"
 
 #############################
@@ -48,6 +48,8 @@ OUTPUT_DIR="/workspace/checkpoints/${RUN_NAME}"
 #############################
 
 NUM_GPUS=${NUM_GPUS:-2}
+# --image_aspect_ratio anyres_max_9 \
+# --image_grid_pinpoints "(1x1),...,(6x6)" \
 
 ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${NUM_GPUS}" \
   llava/train/train_mem.py \
@@ -64,16 +66,16 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --mm_use_im_start_end False \
   --mm_use_im_patch_token False \
   --group_by_modality_length True \
-  --image_aspect_ratio anyres_max_9 \
-  --image_grid_pinpoints "(1x1),...,(6x6)" \
+  --image_aspect_ratio nobase \
   --mm_patch_merge_type spatial_unpad \
   --bf16 True \
+  --tf32 True \
   --run_name "${RUN_NAME}" \
   --output_dir "${OUTPUT_DIR}" \
   --num_train_epochs 1 \
-  --per_device_train_batch_size 1 \
+  --per_device_train_batch_size 4 \
   --per_device_eval_batch_size 1 \
-  --gradient_accumulation_steps 32 \
+  --gradient_accumulation_steps 4 \
   --lora_enable True \
   --lora_r 32 \
   --lora_alpha 64 \
@@ -82,13 +84,12 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --evaluation_strategy "no" \
   --save_strategy "steps" \
   --save_steps 1000 \
-  --save_total_limit 1 \
+  --save_total_limit 20 \
   --learning_rate 1e-5 \
   --weight_decay 0.0 \
   --warmup_ratio 0.03 \
   --lr_scheduler_type "cosine" \
-  --logging_steps 1 \
-  --tf32 False \
+  --logging_steps 100 \
   --model_max_length 4096 \
   --gradient_checkpointing False \
   --dataloader_num_workers 4 \
@@ -99,5 +100,3 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --frames_upbound 32
 
 echo "Finetuning completed. Checkpoints are in: ${OUTPUT_DIR}"
-
-

@@ -1055,7 +1055,7 @@ class LLaVATrainer(Trainer):
                     # Regular training step with gradient accumulation
                     with self.accelerator.accumulate(model):
                         tr_loss_step = self.training_step(model, inputs)
-                        print(f"Step {step} loss: {tr_loss_step}")
+                        # print(f"Step {step} loss: {tr_loss_step}")
 
                 torch.cuda.empty_cache()  # Releasing reserved memory seems not to work correctly, so do it manually
                 ########################
