@@ -66,9 +66,7 @@ def main():
     }
 
     # Streaming stats for attention matrices to avoid storing all samples in memory
-    running_mean = None  # np.ndarray (float64 for numeric stability)
-    running_M2 = None    # np.ndarray (float64)
-    sample_count = 0
+    attention_weight_sums = []
     for item in tqdm(dataset, desc="Evaluating Blink"):
         image_prompt = "".join(f"Image {i+1}: {DEFAULT_IMAGE_TOKEN}\n" for i in range(4) if item[f"image_{i+1}"] is not None)
         question_text = "Question: " + item["question"]
@@ -112,8 +110,6 @@ def main():
             )
 
         attention_matrices = output.attentions
-        # Convert only the first attention "step" to numpy (to match prior behavior)
-        # and update streaming mean/variance to avoid storing per-sample matrices
         if attention_matrices:
             first_step = attention_matrices[0]
             a_layer_numpy_list = []
@@ -122,39 +118,21 @@ def main():
                 a_layer_numpy_list.append(a_layer.mean(axis=(0, 1)).detach().cpu().numpy())
             current_attn = np.stack(a_layer_numpy_list, axis=0).astype(np.float32)
 
-            # Welford's algorithm for numerically stable online mean/std
-            if running_mean is None:
-                running_mean = np.zeros_like(current_attn, dtype=np.float64)
-                running_M2 = np.zeros_like(current_attn, dtype=np.float64)
-                sample_count = 0
-            sample_count += 1
-            delta = current_attn.astype(np.float64) - running_mean
-            running_mean += delta / sample_count
-            delta2 = current_attn.astype(np.float64) - running_mean
-            running_M2 += delta * delta2
+            # Sum the attention weight that output token has on the image tokens
+            img_ids = np.argwhere(modality_ids.detach().cpu().numpy() == 1)
+            current_attn = current_attn[:, -1, img_ids[:, 1]]
 
-        # Downcast modality_ids to int8 to save memory (values expected small)
-        results["modality_ids"].append(modality_ids.detach().cpu().numpy().astype(np.int8))
+            attention_weight_sums.append(current_attn.sum(axis=1))
 
         # Proactively free GPU/CPU memory between samples
         del output, attention_matrices, image_tensors, images, input_ids
         torch.cuda.empty_cache()
         gc.collect()
 
-    final_modality_ids = np.stack(results["modality_ids"], axis=0)
-
-    # Compute final mean/std from streaming stats (avoid storing all per-sample matrices)
-    if sample_count > 1:
-        variance = running_M2 / (sample_count - 1)
-    else:
-        variance = np.zeros_like(running_M2)
-    final_attention_matrix_mean = running_mean.astype(np.float32)
-    final_attention_matrix_std = np.sqrt(variance).astype(np.float32)
+    visual_attention_weight_sums = np.stack(attention_weight_sums, axis=0)
 
     final_dict = {
-        "attention_matrix_mean": final_attention_matrix_mean,
-        "attention_matrix_std": final_attention_matrix_std,
-        "modality_ids": final_modality_ids,
+        "visual_attention_weight_sums": visual_attention_weight_sums,
     }
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
     np.savez_compressed(args.output_path, **final_dict)
