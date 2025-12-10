@@ -54,7 +54,7 @@ NUM_GPUS=${NUM_GPUS:-2}
 ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${NUM_GPUS}" \
   llava/train/train_mem.py \
   --attn_implementation "sdpa" \
-  --model_name_or_path /workspace/checkpoints/LLaVA-Alternating-Attn/llava-onevision-qwen2-0.5b-ov-with_alternating_attn \
+  --model_name_or_path "/workspace/checkpoints/LLaVA-Alternating-Attn/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
   --version "qwen_1_5" \
   --data_path scripts/train/finetune_visualcorres.yaml \
   --image_folder "${IMAGE_FOLDER}" \
@@ -72,14 +72,15 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --tf32 True \
   --run_name "${RUN_NAME}" \
   --output_dir "${OUTPUT_DIR}" \
-  --num_train_epochs 7 \
+  --num_train_epochs 4 \
   --per_device_train_batch_size 4 \
   --per_device_eval_batch_size 1 \
   --gradient_accumulation_steps 4 \
+  --max_grad_norm 1.0 \
   --lora_enable True \
-  --lora_r 64 \
-  --lora_alpha 128 \
-  --lora_dropout 0.05 \
+  --lora_r 32 \
+  --lora_alpha 32 \
+  --lora_dropout 0.1 \
   --lora_bias "none" \
   --evaluation_strategy "no" \
   --save_strategy "steps" \

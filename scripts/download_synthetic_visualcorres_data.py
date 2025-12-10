@@ -19,7 +19,7 @@ features = Features({
 # Load dataset
 dataset = load_dataset(
     'parquet',
-    data_files='/workspace/data/Synthetic-Data/parquet_data/samples_*.parquet',
+    data_files='/workspace/data/Synthetic-Visual-Correspondence-Data/parquet_data/samples_*.parquet',
     features=features
 )["train"]
 
