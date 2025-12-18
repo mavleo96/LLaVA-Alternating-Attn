@@ -1,5 +1,16 @@
+"""Add missing <image> tokens to the first human turn in LLaVA-style JSON.
+
+Given a JSON file containing a list of records with a `conversations` field, this script:
+  1) Loads the JSON file from `--json_path`.
+  2) For each record, checks the first conversation turn (`conversations[0]["value"]`).
+  3) If the string does not already contain `<image>`, it prepends `<image>\\n`.
+The modified JSON overwrites the input file in place and the script reports how many
+records were changed.
+"""
+
 import json
 import argparse
+
 
 def main():
     parser = argparse.ArgumentParser()
