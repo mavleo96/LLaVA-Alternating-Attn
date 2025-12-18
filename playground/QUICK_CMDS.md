@@ -46,3 +46,20 @@ huggingface-cli download lmms-lab/llava-onevision-qwen2-0.5b-ov \
     --local-dir /workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn \
     --local-dir-use-symlinks False
 ```
+
+
+
+### LLava-OneVision-Data Subset List For Finetuning
+
+image_folder = "/workspace/data/LLaVA-OneVision-Data"
+
+| Dataset Name | Config File Name |
+| ---------- | ---------- |
+|"aokvqa(cauldron,llava_format)" | "ov_aokvqa_cauldron_llava_format.json" |
+| "chartqa(cauldron,llava_format)" |"ov_chartqa_cauldron_llava_format.json" |
+| "clevr(cauldron,llava_format)" | "ov_clevr_cauldron_llava_format.json" |
+| "tqa(cauldron,llava_format)" | "ov_tqa_cauldron_llava_format.json" |
+| "raven(cauldron)" | "ov_raven_cauldron.json" |
+| "visual7w(cauldron,llava_format)" | "ov_visual7w_cauldron_llava_format.json" |
+| "vision_flan(filtered)" | "ov_vision_flan_filtered.json" |
+| "image_textualization(filtered)" | "ov_image_textualization_filtered.json" |
