@@ -9,7 +9,6 @@ which tests visual correspondence between images.
 import argparse
 import json
 import re
-from sympy.matrices.expressions.determinant import Q
 import torch
 from tqdm import tqdm
 from datasets import load_dataset
