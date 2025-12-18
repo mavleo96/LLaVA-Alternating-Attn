@@ -6,7 +6,7 @@ This repo is a fork of **LLaVA-NeXT** adapted for the new **LLaVA-Alternating-At
 
 ## What’s here
 - Alternating-attn language models: `llava_qwen_with_alternating_attn.py` (alternating modality-aware masks), `llava_qwen_with_alternating_cross_attn.py` (alternating cross-modality masks), and `llava_mistral_with_alternating_attn.py` (alternating modality-aware masks).
-- Blink eval + attention capture: `scripts/blink_eval.py` and `playground/attention_matrix_save_for_blink.py`.
+- Visual correspondence + BLINK eval: `scripts/visualcorres_eval_vision_encoder.py` (direct vision-encoder accuracy on Synthetic-Visual-Correspondence-Data), `scripts/visualcorres_blink_eval.py` (LLM-based BLINK-style evaluation), and `playground/attention_matrix_save_for_visualcorres.py` (attention dumps).
 - Quick commands and checkpoints: see `playground/QUICK_CMDS.md`.
 
 ## Setup
@@ -36,7 +36,7 @@ pip install -e .
 ## Directory highlights
 - `llava/model/language_model/`: alternating-attn Qwen2 and Mistral implementations and helpers.
 - `playground/`: analysis scripts (attention dumps, quick command cheatsheet).
-- `scripts/`: evaluation utilities (e.g., BLINK).
+- `scripts/`: evaluation utilities (e.g., BLINK + visual correspondence).
 
 ## License
 Apache 2.0 (upstream LLaVA-NeXT license applies).

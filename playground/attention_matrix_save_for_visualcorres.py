@@ -1,5 +1,24 @@
 #!/usr/bin/env python3
 
+"""Extract and save per-layer visual attention weights for Visual Correspondence.
+
+For each sample in the BLINK Visual_Correspondence split, this script:
+
+1. Builds a multi-image prompt, runs a LLaVA model with `output_attentions=True`,
+   and collects the full self-attention tensors for the generated sequence.
+2. For the first decoding step only, and for every transformer layer, it:
+   - Averages attention over batch and head dimensions, producing
+     a per-layer matrix `A_l` of shape (tgt_len, src_len).
+   - Identifies all image tokens via `modality_ids == 1`.
+   - Extracts the attention row for the last token (the current output token)
+     and sums its attention mass over all image-token columns.
+3. The result is, for each sample, a vector of length `num_layers` where each
+   entry is the total attention weight that the final token assigns to all
+   visual tokens in that layer (after head averaging). Stacking these across
+   samples yields an array of shape `(num_samples, num_layers)`, which is saved
+   to disk as `visual_attention_weight_sums` in a compressed `.npz` file.
+"""
+
 import argparse
 import os
 import re
@@ -17,6 +36,7 @@ from peft import PeftModel
 from collections import Counter
 
 import warnings
+
 warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.modules.module")
 import gc
 
