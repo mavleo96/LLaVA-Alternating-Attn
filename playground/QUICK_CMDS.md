@@ -1,10 +1,10 @@
 ### BLINK Evaluation Commands
 #### Usage:
 ```
-python scripts/blink_eval.py \
+python scripts/visualcorres_blink_eval.py \
   --model_path "liuhaotian/llava-v1.6-mistral-7b" \
   --model_name "llava_mistral" \
-  --output_path "results/llava-v1.6-mistral-7b-visual_correspondence.json" \
+  --output_path "results/llava-v1.6-mistral-7b-visualcorres.json" \ 
   --subtask "Visual_Correspondence" \
   --device "cuda:1" \
   --conv_template "manual"
@@ -12,7 +12,7 @@ python scripts/blink_eval.py \
 
 #### Usage with LoRA finetuned model:
 ```
-python scripts/blink_eval.py \
+python scripts/visualcorres_blink_eval.py \
   --model_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
   --model_name "llava_qwen"  \
   --lora_weights_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune/checkpoint-11000" \
@@ -30,14 +30,14 @@ python scripts/blink_eval.py \
 
 ### Command to save attention matrix for Blink evaluation:
 ```
-python playground/attention_matrix_save_for_blink.py \
+python playground/attention_matrix_save_for_visualcorres.py \
   --model_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
   --model_name "llava_qwen_with_alternating_attn" \
   --lora_weights_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune/checkpoint-11000" \
   --subtask Visual_Correspondence \
   --device "cuda:1" \
   --conv_template "qwen_2" \
-  --output_path "/data/vmurugan/llava-next/attention_outputs/llava_qwen2-0.5b_aa_unfinetuned_visualcorres_attention"
+  --output_path "results/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune-visualcorres.npz"
 ```
 
 ### Command to create unfinetuned model checkpoint:

@@ -9,6 +9,7 @@ which tests visual correspondence between images.
 import argparse
 import json
 import re
+import os
 import torch
 from tqdm import tqdm
 from datasets import load_dataset
@@ -301,6 +302,7 @@ def main():
         "correct_distribution": correct_answers,
     }
 
+    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
     with open(args.output_path, "w") as f:
         json.dump(final_results, f)
 
