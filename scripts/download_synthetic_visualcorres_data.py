@@ -28,7 +28,7 @@ def main():
     parser.add_argument(
         "--image_folder",
         type=str,
-        default="/workspace/data/synthetic_visualcorres/images",
+        default="/data/synthetic_visualcorres/images",
         help="Folder to save JPEG images for the synthetic visual correspondence dataset.",
     )
     args = parser.parse_args()

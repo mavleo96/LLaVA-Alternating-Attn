@@ -51,7 +51,7 @@ huggingface-cli download lmms-lab/llava-onevision-qwen2-0.5b-ov \
 
 ### LLava-OneVision-Data Subset List For Finetuning
 
-image_folder = "/workspace/data/LLaVA-OneVision-Data"
+image_folder = "/data/LLaVA-OneVision-Data"
 
 | Dataset Name | Config File Name |
 | ---------- | ---------- |

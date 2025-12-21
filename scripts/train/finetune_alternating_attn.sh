@@ -39,7 +39,7 @@ export NCCL_DEBUG=${NCCL_DEBUG:-WARN}
 #   LLM_VERSION=/path/to/your/local/ckpt scripts/train/finetune_alternating_attn.sh
 # Default to the locally downloaded alternating-attn checkpoint.
 
-IMAGE_FOLDER="/workspace/data/LLaVA-OneVision-Data"
+IMAGE_FOLDER="/data/LLaVA-OneVision-Data"
 RUN_NAME="llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune"
 OUTPUT_DIR="/workspace/checkpoints/${RUN_NAME}"
 
@@ -55,7 +55,7 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   llava/train/train_mem.py \
   --attn_implementation "sdpa" \
   --model_name_or_path /workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn \
-  --version "qwen_1_5" \
+  --version "qwen_2" \
   --data_path scripts/train/finetune_dataset.yaml \
   --image_folder "${IMAGE_FOLDER}" \
   --mm_tunable_parts "mm_language_model" \
