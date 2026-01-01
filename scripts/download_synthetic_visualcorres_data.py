@@ -24,13 +24,8 @@ DATA_FILES = (
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert synthetic visual correspondence parquet data to LLaVA JSON.")
-    parser.add_argument(
-        "--image_folder",
-        type=str,
-        default="/data/synthetic_visualcorres/images",
-        help="Folder to save JPEG images for the synthetic visual correspondence dataset.",
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image_folder",type=str,required=True)
     args = parser.parse_args()
 
     # Load dataset (same parquet shards as the vision-encoder eval script).

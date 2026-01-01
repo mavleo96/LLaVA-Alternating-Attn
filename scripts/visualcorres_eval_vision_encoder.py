@@ -197,11 +197,11 @@ def evaluate_visual_correspondence(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate visual correspondence.")
-    parser.add_argument("--model", choices=["clip", "siglip"], default="clip", help="Which vision encoder to use.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", choices=["clip", "siglip"], default="clip")
     parser.add_argument("--patch_size", type=int, default=256)
     parser.add_argument("--num_samples", type=int, default=1000)
-    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for vision encoder inference.")
+    parser.add_argument("--batch_size", type=int, default=32)
     args = parser.parse_args()
 
     subset = build_dataset(args.num_samples)
