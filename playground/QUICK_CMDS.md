@@ -4,10 +4,10 @@
 python scripts/visualcorres_blink_eval.py \
   --model_path "liuhaotian/llava-v1.6-mistral-7b" \
   --model_name "llava_mistral" \
-  --output_path "results/llava-v1.6-mistral-7b-visualcorres.json" \ 
+  --output_path "results/llava-v1.6-mistral-7b-visualcorres.json" \
   --subtask "Visual_Correspondence" \
   --device "cuda:1" \
-  --conv_template "manual"
+  --conv_template "mistral_instruct"
 ```
 
 #### Usage with LoRA finetuned model:
@@ -24,7 +24,7 @@ python scripts/visualcorres_blink_eval.py \
 #### Options:
 | model_path | model_name | conv_template |
 | ---------- | ---------- | ------------- |
-| "liuhaotian/llava-v1.6-mistral-7b" | "llava_mistral" | "manual" |
+| "liuhaotian/llava-v1.6-mistral-7b" | "llava_mistral" | "mistral_instruct" |
 | "lmms-lab/llava-onevision-qwen2-7b-ov" | "llava_qwen" | "qwen_2" |
 | "lmms-lab/llava-onevision-qwen2-0.5b-ov" | "llava_qwen" | "qwen_2" |
 
@@ -63,3 +63,10 @@ image_folder = "/data/LLaVA-OneVision-Data"
 | "visual7w(cauldron,llava_format)" | "ov_visual7w_cauldron_llava_format.json" |
 | "vision_flan(filtered)" | "ov_vision_flan_filtered.json" |
 | "image_textualization(filtered)" | "ov_image_textualization_filtered.json" |
+
+### Synthetic Visual Correspondence Data
+Image folder: "/data/synthetic_visualcorres/images"
+
+```
+python scripts/download_synthetic_visualcorres_data.py --image_folder "/data/synthetic_visualcorres/images"
+```
