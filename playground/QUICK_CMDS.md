@@ -13,9 +13,9 @@ python scripts/visualcorres_blink_eval.py \
 #### Usage with LoRA finetuned model:
 ```
 python scripts/visualcorres_blink_eval.py \
-  --model_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
+  --model_path "/workspace/checkpoints/llava-alternating-attn-within-modality-qwen2-0.5b-ov" \
   --model_name "llava_qwen"  \
-  --lora_weights_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune/checkpoint-11000" \
+  --lora_weights_path "/workspace/checkpoints/LLaVA-Alternating-Attn/checkpoints/llava-alternating-attn-within-modality-qwen2-0.5b-ov-instructiontuned-visualcorres/checkpoint-11000" \
   --subtask "Visual_Correspondence" \
   --device "cuda:1" \
   --conv_template "qwen_2"
@@ -31,27 +31,18 @@ python scripts/visualcorres_blink_eval.py \
 ### Command to save attention matrix for Blink evaluation:
 ```
 python playground/attention_matrix_save_for_visualcorres.py \
-  --model_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
+  --model_path "/workspace/checkpoints/LLaVA-Alternating-Attn/llava-alternating-attn-within-modality-qwen2-0.5b-ov" \
   --model_name "llava_qwen_with_alternating_attn" \
-  --lora_weights_path "/workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune/checkpoint-11000" \
+  --lora_weights_path "/workspace/checkpoints/LLaVA-Alternating-Attn/checkpoints/llava-alternating-attn-within-modality-qwen2-0.5b-ov-instructiontuned-visualcorres/checkpoint-11000" \
   --subtask Visual_Correspondence \
   --device "cuda:1" \
   --conv_template "qwen_2" \
-  --output_path "results/llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune-visualcorres.npz"
+  --output_path "results/llava-alternating-attn-within-modality-qwen2-0.5b-ov-instructiontuned-visualcorres.npz"
 ```
-
-### Command to create unfinetuned model checkpoint:
-```
-huggingface-cli download lmms-lab/llava-onevision-qwen2-0.5b-ov \
-    --local-dir /workspace/checkpoints/llava-onevision-qwen2-0.5b-ov-with_alternating_attn \
-    --local-dir-use-symlinks False
-```
-
-
 
 ### LLava-OneVision-Data Subset List For Finetuning
 
-image_folder = "/data/LLaVA-OneVision-Data"
+image_folder: "/data/LLaVA-OneVision-Data"
 
 | Dataset Name | Config File Name |
 | ---------- | ---------- |
@@ -65,6 +56,7 @@ image_folder = "/data/LLaVA-OneVision-Data"
 | "image_textualization(filtered)" | "ov_image_textualization_filtered.json" |
 
 ### Synthetic Visual Correspondence Data
+
 Image folder: "/data/synthetic_visualcorres/images"
 
 ```
