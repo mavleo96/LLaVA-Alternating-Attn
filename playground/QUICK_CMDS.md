@@ -46,7 +46,7 @@ image_folder: "/data/LLaVA-OneVision-Data"
 
 | Dataset Name | Config File Name |
 | ---------- | ---------- |
-|"aokvqa(cauldron,llava_format)" | "ov_aokvqa_cauldron_llava_format.json" |
+| "aokvqa(cauldron,llava_format)" | "ov_aokvqa_cauldron_llava_format.json" |
 | "chartqa(cauldron,llava_format)" |"ov_chartqa_cauldron_llava_format.json" |
 | "clevr(cauldron,llava_format)" | "ov_clevr_cauldron_llava_format.json" |
 | "tqa(cauldron,llava_format)" | "ov_tqa_cauldron_llava_format.json" |
