@@ -9,6 +9,7 @@ which tests visual correspondence between images.
 import argparse
 import json
 import re
+import os
 import torch
 from tqdm import tqdm
 from datasets import load_dataset
@@ -27,17 +28,25 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.modules
 from sklearn.metrics import confusion_matrix
 
 
-VISUAL_CORRESPONDENCE_DESCRIBE_PROMPT = "A point is circled on the first image, labeled with REF. \
-We change the camera position or lighting and shoot the second image. You are given multiple red-circled \
-points on the second image, choices of \"A, B, C, D\" are drawn beside each circle."
+VISUAL_CORRESPONDENCE_DESCRIBE_PROMPT = (
+    "A point is circled on the first image, labeled with REF. We change the camera position "
+    "or lighting and shoot the second image. You are given multiple red-circled points on the "
+    "second image, choices of \"A, B, C, D\" are drawn beside each circle."
+)
 
-SEMATIC_CORRESPONDENCE_DESCRIBE_PROMPT = "Humans can find corresponding points for different objects in the same category. \
-For instance, if there are images of two different cats, then the left ear tip of one cat corresponds to the left ear tip of the other cat, \
-and the right front paw of one cat corresponds to the right front paw of the other cat. \
-Given the following two images, a reference point is annotated on the first image, labeled with REF. You are given multiple red-circled points on the second image, \
-choices of \"A, B, C, D\" are drawn beside each circle."
+SEMATIC_CORRESPONDENCE_DESCRIBE_PROMPT = (
+    "Humans can find corresponding points for different objects in the same category. For instance, "
+    "if there are images of two different cats, then the left ear tip of one cat corresponds to the "
+    "left ear tip of the other cat, and the right front paw of one cat corresponds to the right "
+    "front paw of the other cat. Given the following two images, a reference point is annotated "
+    "on the first image, labeled with REF. You are given multiple red-circled points on the second image, "
+    "choices of \"A, B, C, D\" are drawn beside each circle."
+)
 
-DESCRIBE_DIRECTIVE = "Describe the reference point in first image and each of the red-circled points labeled with A, B, C, D in the second image separately."
+DESCRIBE_DIRECTIVE = (
+    "Describe the reference point in first image and each of the red-circled points labeled with "
+    "A, B, C, D in the second image separately."
+)
 
 QUESTION_DIRECTIVE = "Answer with the option’s letter from the given choices directly."
 
@@ -124,7 +133,10 @@ def evaluate(model, tokenizer, image_processor, item, conv_template, device):
 def evaluate_with_query_expansion(model, tokenizer, image_processor, item, conv_template, subtask, device):
     image_prompt = "".join(f"Image {i+1}: {DEFAULT_IMAGE_TOKEN}\n" for i in range(4) if item[f"image_{i+1}"] is not None)
     question_text = "Question: " + item["question"]
-    detailed_describe_prompt = {"Visual_Correspondence": VISUAL_CORRESPONDENCE_DESCRIBE_PROMPT, "Semantic_Correspondence": SEMATIC_CORRESPONDENCE_DESCRIBE_PROMPT}[subtask]
+    detailed_describe_prompt = {
+        "Visual_Correspondence": VISUAL_CORRESPONDENCE_DESCRIBE_PROMPT,
+        "Semantic_Correspondence": SEMATIC_CORRESPONDENCE_DESCRIBE_PROMPT
+    }[subtask]
 
     # Describe the images
     if conv_template == "manual":
@@ -207,7 +219,7 @@ def evaluate_with_query_expansion(model, tokenizer, image_processor, item, conv_
     return response, prompt
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate LLaVA-NeXT on Blink benchmark")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, help="Path to model")
     parser.add_argument("--model_name", type=str, default="llava_mistral", help="Model name")
     parser.add_argument("--lora_weights_path", type=str, default=None, help="Path to lora weights")
@@ -219,8 +231,6 @@ def main():
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to evaluate")
     parser.add_argument("--subtask", type=str, default="Visual_Correspondence", help="BLINK subtask")
     parser.add_argument("--query_expansion", action="store_true", help="Use query expansion")
-
-    
     args = parser.parse_args()
     
     # Disable torch init for faster loading
@@ -301,6 +311,7 @@ def main():
         "correct_distribution": correct_answers,
     }
 
+    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
     with open(args.output_path, "w") as f:
         json.dump(final_results, f)
 

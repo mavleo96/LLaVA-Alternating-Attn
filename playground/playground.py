@@ -10,6 +10,8 @@ from llava.conversation import conv_templates, SeparatorStyle
 import torch
 from PIL import Image
 import copy
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
 
 # model_path = "liuhaotian/llava-v1.6-mistral-7b"
 # model_name = "llava_mistral_with_alternating_attn"
@@ -39,12 +41,10 @@ tokenizer, model, image_processor, context_len = load_pretrained_model(
 )
 model.config.image_aspect_ratio = "nobase"
 
-image_file1 = "/home/vmurugan/LLaVA-NeXT/mario.png"
-image_file2 = "/home/vmurugan/LLaVA-NeXT/test_image.jpg"
-image_file3 = "/home/vmurugan/LLaVA-NeXT/mario.png"
-# images = [Image.open(image_file1), Image.open(image_file2)]
+image_file1 = "images/mario.jpg"
+image_file2 = "images/waterfall.jpg"
 # Convert all images to RGB to ensure they have 3 dimensions
-images = [Image.open(image_file1).convert('RGB'), Image.open(image_file2).convert('RGB'), Image.open(image_file3).convert('RGB')]
+images = [Image.open(image_file1).convert('RGB'), Image.open(image_file2).convert('RGB')]
 
 # Process images using the proper LLaVA-NeXT method
 image_tensors = process_images(images, image_processor, model.config)
@@ -54,7 +54,7 @@ print("image_sizes: ", [image.size for image in images])
 print("images: ", images)
 
 # Use proper conversation template for Qwen OneVision
-conv_template = "qwen_1_5"
+conv_template = "qwen_2"
 conv = copy.deepcopy(conv_templates[conv_template])
 
 # Define questions for each image
@@ -113,6 +113,7 @@ with torch.inference_mode():
 print("output_ids.shape: ", output_ids.shape)
 print("Attention weights available: ", attention_weights is not None)
 
+print("\n", "-" * 100, "\n", sep="")
 if attention_weights is not None:
     print(f"\n=== ATTENTION WEIGHTS ANALYSIS ===")
     print(f"Number of generation steps: {len(attention_weights)}")
@@ -144,6 +145,7 @@ if attention_weights is not None:
         print("No attention weights found")
 else:
     print("Attention weights not available")
+print("\n", "-" * 100, "\n", sep="")
 
 for q, o in zip(prompts, outputs):
     print("Query: ", q)
