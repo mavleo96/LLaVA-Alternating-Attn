@@ -55,6 +55,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
 from llava.model import *
+from llava.model.utils import ensure_attn_implementation_in_config
 from llava.mm_utils import process_highres_image, process_anyres_image, process_highres_image_crop_split, tokenizer_image_token
 from llava.utils import rank0_print, process_video_with_pyav, process_video_with_decord
 
@@ -1364,6 +1365,10 @@ def get_model(model_args, training_args, bnb_model_from_pretrained_args):
             setattr(cfg_pretrained, k, v)
 
         customized_kwargs["config"] = cfg_pretrained
+    
+    # Ensure attn_implementation is set in config if config is being passed explicitly
+    if "config" in customized_kwargs:
+        ensure_attn_implementation_in_config(customized_kwargs["config"], training_args.attn_implementation)
 
     if model_args.model_class_name is not None:
         actual_model_class_name = f"{model_args.model_class_name}ForCausalLM"
