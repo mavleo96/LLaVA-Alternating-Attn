@@ -94,8 +94,13 @@ def evaluate(model, processor, item):
 
 def main():
     # Choose a model checkpoint
-    # model_checkpoint = "OpenGVLab/InternVL3-8B-hf"
+    # model_checkpoint = "OpenGVLab/InternVL3-1B-hf" # Done
+    # model_checkpoint = "OpenGVLab/InternVL3-2B-hf" # Done
+    # model_checkpoint = "OpenGVLab/InternVL3-8B-hf" # Done
+    # model_checkpoint = "Qwen/Qwen2-VL-2B-Instruct" # Done
     model_checkpoint = "Qwen/Qwen2-VL-7B-Instruct"
+    # model_checkpoint = "HuggingFaceTB/SmolVLM-256M-Instruct" # Done
+    # model_checkpoint = "HuggingFaceTB/SmolVLM-500M-Instruct" # Done
     output_path = "results/qwen2-vl-7b-instruct-visualcorres.json"
     device = "cuda:0"
 
@@ -104,7 +109,7 @@ def main():
     model = AutoModelForImageTextToText.from_pretrained(
         model_checkpoint,
         device_map=device,
-        dtype=torch.bfloat16,
+        dtype=torch.float16,
         trust_remote_code=True,
     )
 
