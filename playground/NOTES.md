@@ -43,6 +43,7 @@ HuggingFace Models:
 - HuggingFaceTB/SmolVLM-256M-Instruct
 - HuggingFaceTB/SmolVLM-500M-Instruct
 
+
 TBD HuggingFace Models:
 - Qwen/Qwen2-VL-7B-Instruct
 - Qwen/Qwen3-VL-2B-Instruct
