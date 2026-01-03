@@ -1,8 +1,18 @@
+#!/usr/bin/env python3
+"""
+Analysis Evaluation Script for LLaVA-Alternating-Attn
+
+This script evaluates the model's performance on the Blink benchmark,
+which tests visual correspondence between images.
+"""
+
+
 import os
 import torch
 import re
 import json
-
+import argparse
+import numpy as np
 from sklearn.metrics import confusion_matrix
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from tqdm import tqdm
@@ -41,8 +51,8 @@ def create_confusion_matrix(results):
     }
 
 
-def evaluate(model, processor, item):
-
+def evaluate(model, processor, item, image_token_id):
+    """Evaluate the model on a single item from the dataset."""
     question_text = "Question: " + item["question"]
     detailed_prompt = "Details: " + item["prompt"]
     question_directive = "Answer with the option’s letter from the given choices directly."
@@ -69,7 +79,9 @@ def evaluate(model, processor, item):
         tokenize=True,
         return_dict=True,
         return_tensors="pt"
-    ).to(model.device, dtype=torch.bfloat16)
+    ).to(model.device, dtype=torch.float16)
+    modality_ids = torch.where(inputs.input_ids == image_token_id, 1, 0)
+    input_prompt = processor.decode(inputs["input_ids"][0])
 
     # Generate outputs
     input_ids_len = inputs["input_ids"].shape[1]
@@ -81,44 +93,67 @@ def evaluate(model, processor, item):
             max_new_tokens=256,
             use_cache=True,
         )
+        output2 = model(
+            **inputs,
+            output_attentions=True,
+            return_dict=True,
+        )
 
-    # Decode only the **generated** tokens (after conditioning inputs)
+    # Decode only the generated tokens (after conditioning inputs)
     response = processor.decode(
         output[0, input_ids_len:],
         skip_special_tokens=True
     )
 
-    input_prompt = processor.decode(inputs["input_ids"][0])
-    
-    return response, input_prompt
+    # Process the attention matrices
+    attention_matrices = output2.attentions
+    if attention_matrices:
+        a_layer_numpy_list = []
+        for a_layer in attention_matrices:
+            # average over batch and head dimensions
+            a_layer_numpy_list.append(a_layer.mean(axis=(0, 1)).detach().cpu().numpy())
+        current_attn = np.stack(a_layer_numpy_list, axis=0).astype(np.float32)
+
+        # Sum the attention weight that output token has on the image tokens
+        img_ids = np.argwhere(modality_ids.detach().cpu().numpy() == 1)
+        current_visual_attn = current_attn[:, -1, img_ids[:, 1]].sum(axis=1)
+
+    return response, input_prompt, current_visual_attn
 
 def main():
-    # Choose a model checkpoint
-    # model_checkpoint = "OpenGVLab/InternVL3-1B-hf" # Done
-    # model_checkpoint = "OpenGVLab/InternVL3-2B-hf" # Done
-    # model_checkpoint = "OpenGVLab/InternVL3-8B-hf" # Done
-    # model_checkpoint = "Qwen/Qwen2-VL-2B-Instruct" # Done
-    model_checkpoint = "Qwen/Qwen2-VL-7B-Instruct"
-    # model_checkpoint = "HuggingFaceTB/SmolVLM-256M-Instruct" # Done
-    # model_checkpoint = "HuggingFaceTB/SmolVLM-500M-Instruct" # Done
-    output_path = "results/qwen2-vl-7b-instruct-visualcorres.json"
-    device = "cuda:0"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_checkpoint", type=str, required=True, help="Path to model")
+    parser.add_argument("--results_output_path", type=str, required=True, help="Path to results output")
+    parser.add_argument("--attn_output_path", type=str, required=True, help="Path to attention output")
+    parser.add_argument("--device", type=str, default="cuda:0", help="Device to use")
+    args = parser.parse_args()
 
     # Load processor + model
-    processor = AutoProcessor.from_pretrained(model_checkpoint)
+    processor = AutoProcessor.from_pretrained(args.model_checkpoint)
     model = AutoModelForImageTextToText.from_pretrained(
-        model_checkpoint,
-        device_map=device,
+        args.model_checkpoint,
+        device_map=args.device,
+        output_attentions=True,
         dtype=torch.float16,
         trust_remote_code=True,
     )
+
+    # Get the image token and its ID
+    if "<image>" in processor.tokenizer.special_tokens_map["additional_special_tokens"]:
+        image_token = "<image>"
+    elif "<IMG_CONTEXT>" in processor.tokenizer.special_tokens_map["additional_special_tokens"]:
+        image_token = "<IMG_CONTEXT>"
+    else:
+        raise ValueError("No image token found")
+    image_token_id = processor.tokenizer.convert_tokens_to_ids(image_token)
 
     # Load dataset
     dataset = load_dataset("BLINK-Benchmark/BLINK", "Visual_Correspondence", split="val")
 
     results = []
+    attention_weight_sums = []
     for item in tqdm(dataset, desc="Evaluating Blink"):
-        response, prompt = evaluate(model, processor, item)
+        response, prompt, attn = evaluate(model, processor, item, image_token_id)
 
         correct, response_extracted = extract_and_validate_answer(response, item["answer"])
         results.append({
@@ -129,6 +164,7 @@ def main():
             "correct_answer": item["answer"],
             "correct": correct,
         })
+        attention_weight_sums.append(attn)
 
     # Create confusion matrix
     confusion_matrix = create_confusion_matrix(results)
@@ -149,7 +185,11 @@ def main():
     print(f"Predicted answers: {predicted_answers}")
     print(f"Correct answers: {correct_answers}")
 
+    # Stack the attention weight sums
+    visual_attention_weight_sums = np.stack(attention_weight_sums, axis=0)
+
     final_results = {
+        "model_checkpoint": args.model_checkpoint,
         "confusion_matrix": confusion_matrix,
         "accuracy": accuracy,
         "predicted_answers": predicted_answers,
@@ -158,10 +198,15 @@ def main():
         "prediction_distribution": predicted_answers,
         "correct_distribution": correct_answers,
     }
+    final_attn_dict = {
+        "model_checkpoint": args.model_checkpoint,
+        "visual_attention_weight_sums": visual_attention_weight_sums,
+    }
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
+    os.makedirs(os.path.dirname(args.results_output_path), exist_ok=True)
+    with open(args.results_output_path, "w") as f:
         json.dump(final_results, f)
+    np.savez_compressed(args.attn_output_path, **final_attn_dict)
 
 if __name__ == "__main__":
     main()
