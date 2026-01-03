@@ -6,7 +6,6 @@ AVAILABLE_MODELS = {
     "llava_qwen_with_alternating_attn": "LlavaQwenWithAlternatingAttnForCausalLM, LlavaQwenWithAlternatingAttnConfig",
     "llava_qwen_with_alternating_cross_attn": "LlavaQwenWithAlternatingCrossAttnForCausalLM, LlavaQwenWithAlternatingCrossAttnConfig",
     "llava_mistral": "LlavaMistralForCausalLM, LlavaMistralConfig",
-    "llava_mistral_with_alternating_attn": "LlavaMistralWithAlternatingAttnForCausalLM, LlavaMistralWithAlternatingAttnConfig",
     "llava_mixtral": "LlavaMixtralForCausalLM, LlavaMixtralConfig",
     # "llava_qwen_moe": "LlavaQwenMoeForCausalLM, LlavaQwenMoeConfig",    
     # Add other models as needed

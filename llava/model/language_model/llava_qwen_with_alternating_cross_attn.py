@@ -29,7 +29,6 @@ from transformers.models.qwen2.modeling_qwen2 import (
     QWEN2_INPUTS_DOCSTRING,
     logging,
     _prepare_4d_causal_attention_mask,
-    _prepare_4d_causal_attention_mask_for_sdpa,
     Cache,
     DynamicCache,
 )
@@ -53,6 +52,14 @@ class LlavaQwenWithAlternatingCrossAttnModel(LlavaMetaModel, Qwen2Model):
     config_class = LlavaQwenWithAlternatingCrossAttnConfig
 
     def __init__(self, config: Qwen2Config):
+        # Enforce eager attention only
+        if hasattr(config, '_attn_implementation') and config._attn_implementation != "eager":
+            raise ValueError(
+                f"This model only supports eager attention implementation. "
+                f"Got attn_implementation='{config._attn_implementation}'. "
+                f"Please set attn_implementation='eager' when loading the model."
+            )
+        config._attn_implementation = "eager"
         super(LlavaQwenWithAlternatingCrossAttnModel, self).__init__(config)
 
     @add_start_docstrings_to_model_forward(QWEN2_INPUTS_DOCSTRING)
@@ -114,41 +121,18 @@ class LlavaQwenWithAlternatingCrossAttnModel(LlavaMetaModel, Qwen2Model):
         if inputs_embeds is None:
             inputs_embeds = self.embed_tokens(input_ids)
 
-        if attention_mask is not None and self._attn_implementation == "flash_attention_2" and use_cache:
-            is_padding_right = attention_mask[:, -1].sum().item() != batch_size
-            if is_padding_right:
-                raise ValueError(
-                    "You are attempting to perform batched generation with padding_side='right'"
-                    " this may lead to unexpected behaviour for Flash Attention version of Qwen2. Make sure to "
-                    " call `tokenizer.padding_side  = 'left'` before tokenizing the input. "
-                )
-
-        if self._attn_implementation == "flash_attention_2":
-            # 2d mask is passed through the layers
-            attention_mask = attention_mask if (attention_mask is not None and 0 in attention_mask) else None
-        elif self._attn_implementation == "sdpa" and not output_attentions:
-            # output_attentions=True can not be supported when using SDPA, and we fall back on
-            # the manual implementation that requires a 4D causal mask in all cases.
-            attention_mask = _prepare_4d_causal_attention_mask_for_sdpa(
-                attention_mask,
-                (batch_size, seq_length),
-                inputs_embeds,
-                past_key_values_length,
-            )
-        else:
-            # 4d mask is passed through the layers
-            attention_mask = _prepare_4d_causal_attention_mask(
-                attention_mask,
-                (batch_size, seq_length),
-                inputs_embeds,
-                past_key_values_length,
-                sliding_window=self.config.sliding_window,
-            )
+        # Only eager attention is supported - prepare 4D causal attention mask
+        attention_mask = _prepare_4d_causal_attention_mask(
+            attention_mask,
+            (batch_size, seq_length),
+            inputs_embeds,
+            past_key_values_length,
+            sliding_window=self.config.sliding_window,
+        )
 
         if modality_ids is not None:
             cross_modality_attention_mask = modality_ids_to_cross_modality_attention_mask(modality_ids, (batch_size, seq_length), inputs_embeds.dtype)
-            if attention_mask is not None:
-                cross_modality_attention_mask = combine_attention_masks(attention_mask, cross_modality_attention_mask)
+            cross_modality_attention_mask = combine_attention_masks(attention_mask, cross_modality_attention_mask)
 
         hidden_states = inputs_embeds
 

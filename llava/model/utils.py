@@ -1,4 +1,20 @@
 from transformers import AutoConfig
+from typing import Optional
+
+
+def ensure_attn_implementation_in_config(config: Optional[object], attn_implementation: Optional[str]) -> None:
+    """
+    Ensure that _attn_implementation is set in the config if both config and attn_implementation are provided.
+    
+    This is necessary because when a config is passed explicitly to from_pretrained(),
+    transformers may not automatically set _attn_implementation in the config object.
+    
+    Args:
+        config: The model config object (can be None)
+        attn_implementation: The attention implementation string (e.g., "sdpa", "flash_attention_2", "eager")
+    """
+    if config is not None and attn_implementation is not None:
+        setattr(config, "_attn_implementation", attn_implementation)
 
 
 def auto_upgrade(config):

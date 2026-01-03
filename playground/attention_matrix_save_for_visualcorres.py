@@ -21,7 +21,6 @@ For each sample in the BLINK Visual_Correspondence split, this script:
 
 import argparse
 import os
-import re
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -32,8 +31,6 @@ from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
 from llava.conversation import conv_templates
 from llava.utils import disable_torch_init
 from peft import PeftModel
-
-from collections import Counter
 
 import warnings
 
@@ -60,7 +57,7 @@ def main():
     disable_torch_init()
     
     # Load model
-    tokenizer, model, image_processor, context_len = load_pretrained_model(
+    tokenizer, model, image_processor, _ = load_pretrained_model(
         model_path=args.model_path,
         model_base=None,
         model_name=args.model_name,
