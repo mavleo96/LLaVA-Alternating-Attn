@@ -64,9 +64,9 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --run_name "${RUN_NAME}" \
   --output_dir "${OUTPUT_DIR}" \
   --num_train_epochs 4 \
-  --per_device_train_batch_size 4 \
+  --per_device_train_batch_size 2 \
   --per_device_eval_batch_size 1 \
-  --gradient_accumulation_steps 4 \
+  --gradient_accumulation_steps 8 \
   --lora_enable True \
   --lora_r 32 \
   --lora_alpha 64 \
