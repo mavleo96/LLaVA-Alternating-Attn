@@ -15,8 +15,8 @@
 #   NUM_GPUS=4 RUN_NAME=llava-next-altattn scripts/train/finetune_alternating_attn.sh
 #
 # Important:
-#   - The Qwen checkpoint path MUST contain "with_alternating_attn"
-#     so that `llava/train/train.py` picks `LlavaQwenWithAlternatingAttnForCausalLM`.
+#   - The Qwen checkpoint path MUST contain "alternating-attn-within-modality" (e.g. "llava-alternating-attn-within-modality-qwen2-0.5b-ov")
+#     so that `llava/train/train.py` picks `LlavaQwenWithAlternatingAttnForCausalLM` and `LlavaQwenWithAlternatingCrossAttnForCausalLM`.
 #   - Edit DATA_YAML / IMAGE_FOLDER / VIDEO_FOLDER to match your local setup.
 ###############################################################################
 
@@ -30,18 +30,9 @@ export NCCL_DEBUG=${NCCL_DEBUG:-WARN}
 ## Model & Vision cfg ##
 ########################
 
-# Qwen 0.5B alternating-attention LLaVA checkpoint from Hugging Face.
-# This corresponds to the model used in `playground.py`:
-#   model_path = "lmms-lab/llava-onevision-qwen2-0.5b-ov"
-#   model_name = "llava_qwen_with_alternating_attn"
-#
-# You can override this via:
-#   LLM_VERSION=/path/to/your/local/ckpt scripts/train/finetune_alternating_attn.sh
-# Default to the locally downloaded alternating-attn checkpoint.
-
-IMAGE_FOLDER="/workspace/data/synthetic_visualcorres/images"
-RUN_NAME="llava-onevision-qwen2-0.5b-ov-with_alternating_attn-finetune-visualcorres"
-OUTPUT_DIR="/workspace/checkpoints/LLaVA-Alternating-Attn/${RUN_NAME}"
+IMAGE_FOLDER="/data/synthetic_visualcorres/images"
+RUN_NAME="llava-alternating-attn-within-modality-qwen2-0.5b-ov-instructiontuned-visualcorres"
+OUTPUT_DIR="/workspace/checkpoints/LLaVA-Alternating-Attn/checkpoints/${RUN_NAME}"
 
 #############################
 ## Launch training (single)##
@@ -53,9 +44,9 @@ NUM_GPUS=${NUM_GPUS:-2}
 
 ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${NUM_GPUS}" \
   llava/train/train_mem.py \
-  --attn_implementation "sdpa" \
-  --model_name_or_path "/workspace/checkpoints/LLaVA-Alternating-Attn/llava-onevision-qwen2-0.5b-ov-with_alternating_attn" \
-  --version "qwen_1_5" \
+  --attn_implementation "eager" \
+  --model_name_or_path "/workspace/checkpoints/LLaVA-Alternating-Attn/llava-alternating-attn-within-modality-qwen2-0.5b-ov" \
+  --version "qwen_2" \
   --data_path scripts/train/finetune_visualcorres.yaml \
   --image_folder "${IMAGE_FOLDER}" \
   --mm_tunable_parts "mm_language_model" \
@@ -79,12 +70,12 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --max_grad_norm 1.0 \
   --lora_enable True \
   --lora_r 32 \
-  --lora_alpha 32 \
+  --lora_alpha 64 \
   --lora_dropout 0.1 \
   --lora_bias "none" \
   --evaluation_strategy "no" \
   --save_strategy "steps" \
-  --save_steps 1000 \
+  --save_steps 500 \
   --save_total_limit 20 \
   --learning_rate 1e-5 \
   --weight_decay 0.0 \
