@@ -75,7 +75,7 @@ ACCELERATE_CPU_AFFINITY=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node "${
   --lora_bias "none" \
   --evaluation_strategy "no" \
   --save_strategy "steps" \
-  --save_steps 1000 \
+  --save_steps 500 \
   --save_total_limit 20 \
   --learning_rate 1e-5 \
   --weight_decay 0.0 \
