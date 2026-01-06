@@ -150,6 +150,8 @@ def main():
     visual_attention_weight_sums = np.stack(attention_weight_sums, axis=0)
 
     final_dict = {
+        "model_path": args.model_path,
+        "lora_weights_path": args.lora_weights_path,
         "visual_attention_weight_sums": visual_attention_weight_sums,
     }
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)

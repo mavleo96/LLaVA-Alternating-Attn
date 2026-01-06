@@ -36,15 +36,15 @@ These models have loading issues with the current version of code.
 
 
 HuggingFace Models:
-- OpenGVLab/InternVL3-1B-hf
-- OpenGVLab/InternVL3-2B-hf
-- OpenGVLab/InternVL3-8B-hf
-- Qwen/Qwen2-VL-2B-Instruct
 - HuggingFaceTB/SmolVLM-256M-Instruct
 - HuggingFaceTB/SmolVLM-500M-Instruct
+- OpenGVLab/InternVL3-1B-hf
+- OpenGVLab/InternVL3-2B-hf
+- Qwen/Qwen2-VL-2B-Instruct
 
 
 TBD HuggingFace Models:
+- OpenGVLab/InternVL3-8B-hf
 - Qwen/Qwen2-VL-7B-Instruct
 - Qwen/Qwen3-VL-2B-Instruct
 - Qwen/Qwen3-VL-4B-Instruct

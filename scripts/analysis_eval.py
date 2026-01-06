@@ -6,6 +6,10 @@ This script evaluates the model's performance on the Blink benchmark,
 which tests visual correspondence between images.
 """
 
+# conda create -n temp python=3.12
+# conda activate temp
+# pip install torch torchvision huggingface_hub transformers datasets accelerate scikit-learn tqdm numpy
+
 
 import os
 import torch
@@ -79,7 +83,7 @@ def evaluate(model, processor, item, image_token_id):
         tokenize=True,
         return_dict=True,
         return_tensors="pt"
-    ).to(model.device, dtype=torch.float16)
+    ).to(model.device, dtype=torch.bfloat16)
     modality_ids = torch.where(inputs.input_ids == image_token_id, 1, 0)
     input_prompt = processor.decode(inputs["input_ids"][0])
 
@@ -111,7 +115,7 @@ def evaluate(model, processor, item, image_token_id):
         a_layer_numpy_list = []
         for a_layer in attention_matrices:
             # average over batch and head dimensions
-            a_layer_numpy_list.append(a_layer.mean(axis=(0, 1)).detach().cpu().numpy())
+            a_layer_numpy_list.append(a_layer.type(torch.float16).mean(axis=(0, 1)).detach().cpu().numpy())
         current_attn = np.stack(a_layer_numpy_list, axis=0).astype(np.float32)
 
         # Sum the attention weight that output token has on the image tokens
@@ -134,15 +138,20 @@ def main():
         args.model_checkpoint,
         device_map=args.device,
         output_attentions=True,
-        dtype=torch.float16,
+        dtype=torch.bfloat16,
         trust_remote_code=True,
     )
 
     # Get the image token and its ID
     if "<image>" in processor.tokenizer.special_tokens_map["additional_special_tokens"]:
+        # LLaVA & SmolVLM models use <image> as the image token
         image_token = "<image>"
     elif "<IMG_CONTEXT>" in processor.tokenizer.special_tokens_map["additional_special_tokens"]:
+        # InternVL models use <IMG_CONTEXT> as the image token
         image_token = "<IMG_CONTEXT>"
+    elif "<|image_pad|>" in processor.tokenizer.special_tokens_map["additional_special_tokens"]:
+        # QwenVL models use <|image_pad|> as the image token
+        image_token = "<|image_pad|>"
     else:
         raise ValueError("No image token found")
     image_token_id = processor.tokenizer.convert_tokens_to_ids(image_token)
@@ -189,7 +198,7 @@ def main():
     visual_attention_weight_sums = np.stack(attention_weight_sums, axis=0)
 
     final_results = {
-        "model_checkpoint": args.model_checkpoint,
+        "model_path": args.model_checkpoint,
         "confusion_matrix": confusion_matrix,
         "accuracy": accuracy,
         "predicted_answers": predicted_answers,
@@ -199,7 +208,7 @@ def main():
         "correct_distribution": correct_answers,
     }
     final_attn_dict = {
-        "model_checkpoint": args.model_checkpoint,
+        "model_path": args.model_checkpoint,
         "visual_attention_weight_sums": visual_attention_weight_sums,
     }
 

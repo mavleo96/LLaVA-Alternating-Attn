@@ -301,6 +301,8 @@ def main():
     print(f"Correct answers: {correct_answers}")
 
     final_results = {
+        "model_path": args.model_path,
+        "lora_weights_path": args.lora_weights_path,
         "confusion_matrix": confusion_matrix,
         "accuracy": accuracy,
         "predicted_answers": predicted_answers,
