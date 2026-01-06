@@ -21,7 +21,6 @@ from llava.utils import disable_torch_init
 from peft import PeftModel
 
 from collections import Counter
-from typing import Dict, List
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.modules.module")
@@ -69,7 +68,7 @@ def extract_and_validate_answer(response, correct_answer):
     return correct, response
 
 
-def create_confusion_matrix(results: List[Dict[str, str]]) -> Dict[str, Dict[str, int]]:
+def create_confusion_matrix(results):
     """Build a confusion matrix keyed by ground-truth then prediction using sklearn."""
     labels = sorted({r["answer"] for r in results} | {r["correct_answer"] for r in results})
     y_true = [r["correct_answer"] for r in results]
@@ -240,7 +239,7 @@ def main():
         raise ValueError(f"Subtask {args.subtask} not supported")
     
     # Load model
-    tokenizer, model, image_processor, context_len = load_pretrained_model(
+    tokenizer, model, image_processor, _ = load_pretrained_model(
         model_path=args.model_path,
         model_base=None,
         model_name=args.model_name,
@@ -302,6 +301,8 @@ def main():
     print(f"Correct answers: {correct_answers}")
 
     final_results = {
+        "model_path": args.model_path,
+        "lora_weights_path": args.lora_weights_path,
         "confusion_matrix": confusion_matrix,
         "accuracy": accuracy,
         "predicted_answers": predicted_answers,
