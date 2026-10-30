@@ -34,7 +34,7 @@ def modality_ids_to_cross_modality_attention_mask(modality_ids, input_shape, tor
     diag_view.zero_()
 
     # return the mask with shape (batch_size, 1, s, s) with mask values set to -inf
-    return mask_combined[:, :, :s, :]
+    return mask_combined[:, :, -s:, :]
 
 
 def modality_ids_to_modality_attention_mask(modality_ids, input_shape, torch_dtype):
@@ -58,7 +58,7 @@ def modality_ids_to_modality_attention_mask(modality_ids, input_shape, torch_dty
     mask_combined = mask_img.masked_fill(mask_text == 0., 0.) # OR operation
 
     # return the mask with shape (batch_size, 1, s, s) with mask values set to -inf to isolate the text and image tokens
-    return mask_combined[:, :, :s, :]
+    return mask_combined[:, :, -s:, :]
 
 def combine_attention_masks(mask, *masks):
     # combine the mask using AND operation
